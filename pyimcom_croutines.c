@@ -654,7 +654,7 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
 
     /* make local, flattened versions of arrays*/
     double *image_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
-    double *coords_data = (double*)malloc((size_t)(cols*rows*2*sizeof(double)));
+//    double *coords_data = (double*)malloc((size_t)(cols*rows*2*sizeof(double)));
     double *interp_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
 
     ipos=0;
@@ -667,12 +667,6 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
           }
     }
 
-    #pragma omp parallel for
-    for (int k = 0; k < num_coords; k++) {
-        coords_data[2*k]   = *(double*)PyArray_GETPTR2(coords_, k, 0); // y
-        coords_data[2*k+1] = *(double*)PyArray_GETPTR2(coords_, k, 1); // x
-    }
-
 
     double x, y;
     int x1, y1, x2, y2;
@@ -680,8 +674,8 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
 
     #pragma omp parallel for private(x, y, x1, y1, x2, y2, dx, dy)
     for (int k = 0; k < num_coords; ++k) { //iterate through coordinate pairs
-         y = coords_data[2*k];
-         x = coords_data[2*k+1];
+         y = *(double*)PyArray_GETPTR2(coords_, k, 0);
+         x = *(double*)PyArray_GETPTR2(coords_, k, 1);
 
         // Calculate the indices of the four surrounding pixels
          x1 = (int)floor(x);
@@ -718,7 +712,7 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
      /* reference count and resolve */
 
     free(image_data);
-    free(coords_data);
+//    free(coords_data);
     free(interp_data);
 
     Py_DECREF(image_);
@@ -841,7 +835,7 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
 
     /* Clean up */
     free(image_data);
-    free(coords_data);
+//    free(coords_data);
     free(original_data);
 
     /* reference count and resolve */
