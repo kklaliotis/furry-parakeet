@@ -785,7 +785,7 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
 
     /* Allocate memory for local arrays */
     double *image_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
-    double *coords_data = (double*)malloc((size_t)(2 * num_coords * sizeof(double)));
+//    double *coords_data = (double*)malloc((size_t)(2 * num_coords * sizeof(double)));
     double *original_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
 
     /* Copy input data to local arrays */
@@ -798,20 +798,15 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
           }
     }
 
-    #pragma omp parallel for
-    for (int k = 0; k < num_coords; k++) {
-        coords_data[2*k] = *(double*)PyArray_GETPTR2(coords_, k, 0);     // y coordinate
-        coords_data[2*k+1] = *(double*)PyArray_GETPTR2(coords_, k, 1);   // x coordinate
-    }
-
     double x, y;
     int x1, y1, x2, y2;
     double dx, dy;
+    double w11, w21, w12, w22;
 
     #pragma omp parallel for private(x, y, x1, y1, x2, y2, dx, dy)
     for (int k = 0; k < num_coords; k++) {
-        y = coords_data[2 * k];
-        x = coords_data[2 * k + 1];
+        y = *(double*)PyArray_GETPTR2(coords_, k, 0);
+        x = *(double*)PyArray_GETPTR2(coords_, k, 1);
 
         x1 = (int)floor(x);
         y1 = (int)floor(y);
@@ -827,15 +822,19 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
         dy = y - y1;
 
         // Weights
-        double w11 = (1 - dx) * (1 - dy);
-        double w21 = (1 - dx) * dy;
-        double w12 = dx * (1 - dy);
-        double w22 = dx * dy;
+        w11 = (1 - dx) * (1 - dy);
+        w21 = (1 - dx) * dy;
+        w12 = dx * (1 - dy);
+        w22 = dx * dy;
 
         // Accumulate contributions based on weights
+        #pragma omp atomic
         original_data[y1 * cols + x1] += w11 * image_data[k];
+        #pragma omp atomic
         original_data[y1 * cols + x2] += w12 * image_data[k];
+        #pragma omp atomic
         original_data[y2 * cols + x1] += w21 * image_data[k];
+        #pragma omp atomic
         original_data[y2 * cols + x2] += w22 * image_data[k];
     }
 
