@@ -2,7 +2,7 @@
 [project]
 name = "furry-parakeet"
 license = {file = "LICENSE"}
-readme = "README.md"
+readme = "README.rst"
 authors = [
     { name = "Christopher Hirata", email = "hirata.10@osu.edu" },
     { name = "Katherine Laliotis", email = "laliotis.2@osu.edu" }
