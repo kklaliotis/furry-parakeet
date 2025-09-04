@@ -12,6 +12,11 @@ You should be able to pip install by going to the ``furry-parakeet`` directory a
 
 This uses the Numpy/C API. If you want to adjust the default settings for C compilers, you can edit ``setup.py`` (for example: openmp is enabled by default).
 
+Helpful information
+===================
+
+There are `interface instructions <docs/interface_instructions.rst>`_ if you are interested in how ``furry-parakeet`` can interface with other tools in the Roman ecosystem.
+
 Links
 =====
 
