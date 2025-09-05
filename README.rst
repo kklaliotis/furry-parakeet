@@ -12,6 +12,16 @@ You should be able to pip install by going to the ``furry-parakeet`` directory a
 
 This uses the Numpy/C API. If you want to adjust the default settings for C compilers, you can edit ``setup.py`` (for example: openmp is enabled by default).
 
+Legacy versions
+===============
+
+Previous versions of ``furry-parakeet`` installed each file as a python module, so you would import with ``import pyimcom_croutines``. You would now write ``from furry_parakeet import pyimcom_croutines``. You can make code that would be compatible with either using::
+
+    try:
+        from furry_parakeet import pyimcom_croutines
+    except ImportError:
+        import pyimcom_croutines
+
 Helpful information
 ===================
 
