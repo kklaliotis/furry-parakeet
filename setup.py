@@ -10,7 +10,6 @@ el = ["-fopenmp"]
 
 setup(
     name="furry_parakeet",
-    version="2",
     ext_modules=[
         Extension(
             "furry_parakeet.pyimcom_croutines",
