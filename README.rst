@@ -1,5 +1,4 @@
 .. image:: https://codecov.io/github/Roman-HLIS-Cosmology-PIT/furry-parakeet/graph/badge.svg?token=K33BI5YAKV
-:target: https://codecov.io/github/Roman-HLIS-Cosmology-PIT/furry-parakeet
 
 furry-parakeet: C kernels and wrappers for image combination
 ############################################################
