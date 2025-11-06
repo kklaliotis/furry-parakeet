@@ -658,7 +658,6 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
 
     /* make local, flattened versions of arrays*/
     double *image_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
-//    double *coords_data = (double*)malloc((size_t)(cols*rows*2*sizeof(double)));
     double *interp_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
 
     ipos=0;
@@ -716,7 +715,6 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
      /* reference count and resolve */
 
     free(image_data);
-//    free(coords_data);
     free(interp_data);
 
     Py_DECREF(image_);
@@ -775,7 +773,6 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
 
     /* Allocate memory for local arrays */
     double *image_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
-//    double *coords_data = (double*)malloc((size_t)(2 * num_coords * sizeof(double)));
     double *original_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
 
     /* Copy input data to local arrays */
@@ -839,7 +836,6 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
 
     /* Clean up */
     free(image_data);
-//    free(coords_data);
     free(original_data);
 
     /* reference count and resolve */
