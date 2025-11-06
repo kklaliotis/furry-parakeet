@@ -1,6 +1,7 @@
 #include <string.h>
 #include <Python.h>
-#include "ndarrayobject.h"
+
+#include <numpy/ndarrayobject.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -202,6 +203,7 @@ static PyObject *pyimcom_iD5512C(PyObject *self, PyObject *args) {
   locdata = (double*)PyArray_DATA(infunc_);
 
   /* loop over points to interpolate */
+  #pragma omp parallel for private(x,y,xi,yi,xfh,yfh,xfh2,yfh2,e_,o_,wx,wy,ilayer,out,L2,interp_vstrip)
   for(ipos=0;ipos<nout;ipos++) {
     x = *(double*)PyArray_GETPTR1(xpos_,ipos);
     y = *(double*)PyArray_GETPTR1(ypos_,ipos);
@@ -333,7 +335,9 @@ static PyObject *pyimcom_iD5512C_sym(PyObject *self, PyObject *args) {
   locdata = (double*)PyArray_DATA(infunc_);
 
   /* loop over points to interpolate, but in this function only the upper half triangle */
-  for(ipos1=0;ipos1<sqnout;ipos1++) for(ipos2=ipos1;ipos2<sqnout;ipos2++) {
+  #pragma omp parallel for private(x,y,xi,yi,xfh,yfh,xfh2,yfh2,e_,o_,wx,wy,ilayer,out,L2,interp_vstrip,ipos,ipos2)
+  for(ipos1=0;ipos1<sqnout;ipos1++) {
+  for(ipos2=ipos1;ipos2<sqnout;ipos2++) {
     ipos = ipos1*sqnout+ipos2;
     x = *(double*)PyArray_GETPTR1(xpos_,ipos);
     y = *(double*)PyArray_GETPTR1(ypos_,ipos);
@@ -400,7 +404,7 @@ static PyObject *pyimcom_iD5512C_sym(PyObject *self, PyObject *args) {
       }
       *(double*)PyArray_GETPTR2(fhatout_, ilayer, ipos) = out;
     }
-  }
+  }}
 
   /* ... and now fill in the lower half triangle */
   for(ipos1=1;ipos1<sqnout;ipos1++) for(ipos2=0;ipos2<ipos1;ipos2++) {
