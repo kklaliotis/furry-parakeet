@@ -772,8 +772,9 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
     }
 
     /* Allocate memory for local arrays */
-    double *image_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
-    double *original_data = (double*)malloc((size_t)(rows * cols * sizeof(double)));
+    size_t image_size = (size_t)(rows * cols);
+    double *image_data = (double*)malloc(image_size *  sizeof(double));
+    double *original_data = (double*)malloc(image_size * sizeof(double));
 
     /* Copy input data to local arrays */
     long ipos=0;
