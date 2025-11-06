@@ -786,45 +786,74 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
           }
     }
 
-    double x, y;
-    int x1, y1, x2, y2;
-    double dx, dy;
-    double w11, w21, w12, w22;
+    int num_threads;
+    double **thread_buffers;
 
-    #pragma omp parallel for private(x, y, x1, y1, x2, y2, dx, dy)
-    for (int k = 0; k < num_coords; k++) {
-        y = *(double*)PyArray_GETPTR2(coords_, k, 0);
-        x = *(double*)PyArray_GETPTR2(coords_, k, 1);
-
-        x1 = (int)floor(x);
-        y1 = (int)floor(y);
-        x2 = x1 + 1;
-        y2 = y1 + 1;
-
-        if (x1 < 0 || x2 >= cols || y1 < 0 || y2 >= rows) {
-            continue; // Skip out-of-bounds
+    #pragma omp parallel
+    {
+      #pragma omp single
+      {
+        num_threads = omp_get_num_threads();
+        thread_buffers = (double**)malloc(num_threads * sizeof(double*));
+        for (int t = 0; t < num_threads; t++) {
+            thread_buffers[t] = (double*)calloc(image_size, sizeof(double));
         }
+      }
+      
+      int tid = omp_get_thread_num();
+      double *local_buffer = thread_buffers[tid];
 
-        // Compute fractional distances from x1 and y1
-        dx = x - x1;
-        dy = y - y1;
+      double x, y;
+      int x1, y1, x2, y2;
+      double dx, dy;
+      double w11, w21, w12, w22;
 
-        // Weights
-        w11 = (1 - dx) * (1 - dy);
-        w21 = (1 - dx) * dy;
-        w12 = dx * (1 - dy);
-        w22 = dx * dy;
+      #pragma omp for
+      for (int k = 0; k < num_coords; k++) {
+          y = *(double*)PyArray_GETPTR2(coords_, k, 0);
+          x = *(double*)PyArray_GETPTR2(coords_, k, 1);
 
-        // Accumulate contributions based on weights
-        #pragma omp atomic
-        original_data[y1 * cols + x1] += w11 * image_data[k];
-        #pragma omp atomic
-        original_data[y1 * cols + x2] += w12 * image_data[k];
-        #pragma omp atomic
-        original_data[y2 * cols + x1] += w21 * image_data[k];
-        #pragma omp atomic
-        original_data[y2 * cols + x2] += w22 * image_data[k];
+          x1 = (int)floor(x);
+          y1 = (int)floor(y);
+          x2 = x1 + 1;
+          y2 = y1 + 1;
+
+          if (x1 < 0 || x2 >= cols || y1 < 0 || y2 >= rows) {
+              continue; // Skip out-of-bounds
+          }
+
+          // Compute fractional distances from x1 and y1
+          dx = x - x1;
+          dy = y - y1;
+
+          // Weights
+          w11 = (1 - dx) * (1 - dy);
+          w21 = (1 - dx) * dy;
+          w12 = dx * (1 - dy);
+          w22 = dx * dy;
+
+          // Accumulate contributions based on weights
+          local_buffer[y1 * cols + x1] += w11 * image_data[k];
+          local_buffer[y1 * cols + x2] += w12 * image_data[k];
+          local_buffer[y2 * cols + x1] += w21 * image_data[k];
+          local_buffer[y2 * cols + x2] += w22 * image_data[k];
+      } // end k loop
+    } // end parallel region
+
+    #pragma omp parallel for
+    for (size_t i = 0; i < image_size; i++) {
+      double sum = 0.0;
+      for (int t = 0; t < num_threads; t++) {
+          sum += thread_buffers[t][i];
+      }
+      original_data[i] = sum;
     }
+
+    /* Clean up thread buffers */
+    for (int t=0; t < num_threads; t++) {
+      free(thread_buffers[t]);
+    }
+    free(thread_buffers);
 
     /* Copy back to numpy arrays */
     #pragma omp parallel for
