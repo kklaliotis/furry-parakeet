@@ -630,7 +630,6 @@ static PyObject *pyimcom_gridD5512C(PyObject *self, PyObject *args) {
  */
 static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
     int rows, cols, num_coords;
-    int yip, xip, ipos;
     PyObject *image, *g_eff, *coords; /*inputs*/
     PyObject *interpolated_image; /*outputs*/
     PyArrayObject *image_, *g_eff_, *coords_; /*inputs*/
@@ -660,16 +659,14 @@ static PyObject *bilinear_interpolation(PyObject *self, PyObject *args) {
     double *image_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
     double *interp_data = (double*)malloc((size_t)(cols*rows*sizeof(double)));
 
-    ipos=0;
     #pragma omp parallel for
-    for(yip=0;yip<rows;yip++) {
-        for(xip=0;xip<cols;xip++) {
-            ipos = yip * cols + xip;
+    for(int yip=0;yip<rows;yip++) {
+        for(int xip=0;xip<cols;xip++) {
+            int ipos = yip * cols + xip;
             image_data[ipos] = *(double*)PyArray_GETPTR2(image_, yip, xip)
             * *(double*)PyArray_GETPTR2(g_eff_, yip, xip);
           }
     }
-
 
     double x, y;
     int x1, y1, x2, y2;
@@ -777,11 +774,10 @@ static PyObject *bilinear_transpose (PyObject *self, PyObject *args){
     double *original_data = (double*)malloc(image_size * sizeof(double));
 
     /* Copy input data to local arrays */
-    long ipos=0;
     #pragma omp parallel for
-    for(long yip=0;yip<rows;yip++) {
-        for(long xip=0;xip<cols;xip++) {
-            ipos = yip * cols + xip;
+    for(int yip=0;yip<rows;yip++) {
+        for(int xip=0;xip<cols;xip++) {
+            int ipos = yip * cols + xip;
             image_data[ipos] = *(double*)PyArray_GETPTR2(image_, yip, xip);
           }
     }
